@@ -63,7 +63,7 @@ def list_objects(bucket):
             if item['name'].endswith('/index.html'):
                 list_string = (list_string + '<a href="https://storage.googleapis.com/zig/' + 
                         item['name'] + '">' + item['name'][:-11] + 
-                        '</a> <a href="http://threejs.org/editor#app=https://storage.googleapis.com/zig/' + 
+                        '</a> <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' + 
                         item['name'][:-11] + '/app.json">(edit)</a><p>\n')
         #list_string = list_string + json.dumps(resp, indent=2)
         req = service.objects().list_next(req, resp)
