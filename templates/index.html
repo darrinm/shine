@@ -79,9 +79,9 @@ function refreshUserProjects() {
         var shortName = item.name.substr(item.name, item.name.length - 11);
         var childDiv = document.createElement('div');
         childDiv.innerHTML = '<a href="https://storage.googleapis.com/zig/' +
-                        item.name+ '">' + shortName +
-                        '</a> <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
-                        shortName + '/app.json">(edit)</a>\n';
+            item.name+ '">' + shortName +
+            '</a> <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
+            shortName + '/app.json">(edit)</a>\n';
         div.appendChild(childDiv);
       }
     }
