@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  <meta name="google-signin-client_id" content="1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleusercontent.com">    <meta charset="UTF-8">
+  <title>Shine</title>
+</head>
+<body>
+  <div style="float: right">
+    <div id="user-id"></div><div id="user-name"></div><div id="user-email"></div><div><img id="user-avatar" style="display: none"></img></div>
+    <div id="sign-in-button" class="g-signin2" data-onsuccess="onSignIn"></div>
+    <a id="sign-out-button" href="#" style="display: none" onclick="signOut();">Sign out</a>
+  </div>
+<script>
+function onSignIn(googleUser) {
+  document.getElementById('sign-in-button').style.display = 'none';
+  document.getElementById('sign-out-button').style.display = 'block';
+  var profile = googleUser.getBasicProfile();
+//  document.getElementById('user-id').innerHTML = profile.getId();
+  document.getElementById('user-name').innerHTML = profile.getName();
+//  document.getElementById('user-email').innerHTML = profile.getEmail();
+  document.getElementById('user-avatar').style.display = 'block';
+  document.getElementById('user-avatar').src = profile.getImageUrl();
+}
+
+function signOut() {
+  var auth2 = gapi.auth2.getAuthInstance();
+  auth2.signOut().then(function () {
+    document.getElementById('sign-in-button').style.display = 'block';
+    document.getElementById('sign-out-button').style.display = 'none';
+//    document.getElementById('user-id').innerHTML = "";
+    document.getElementById('user-name').innerHTML = "";
+//    document.getElementById('user-email').innerHTML = "";
+    document.getElementById('user-avatar').style.display = 'none';
+    document.getElementById('user-avatar').src = null;
+  });
+}
+</script>     
+</body>
+</html>
