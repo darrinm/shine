@@ -1,17 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="google-signin-client_id" content="1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleusercontent.com">
+  <meta charset="UTF-8">
   <script src="https://apis.google.com/js/platform.js" async defer></script>
-  <meta name="google-signin-client_id" content="1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleusercontent.com">    <meta charset="UTF-8">
-  <title>Shine</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <script src="https://apis.google.com/js/client.js"></script>
+ <title>Shine</title>
 </head>
-<body>
+<body onload="onLoad()">
   <div style="float: right">
     <div id="user-id"></div><div id="user-name"></div><div id="user-email"></div><div><img id="user-avatar" style="display: none"></img></div>
-    <div id="sign-in-button" class="g-signin2" data-onsuccess="onSignIn"></div>
+   <a id="sign-in-button" href="#">Sign in</a>
     <a id="sign-out-button" href="#" style="display: none" onclick="signOut();">Sign out</a>
   </div>
+  <div id="user-projects"></div>
 <script>
+var PROJECT = 'shine-1164';
+var clientId = '1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleusercontent.com';
+var apiKey = 'AIzaSyD0CErkFNxMqKzJm7xf4OOe7sjXYOg__PU';
+var API_VERSION = 'v1';
+var scopes = 'https://www.googleapis.com/auth/devstorage.read_write';
+
+
+function onLoad() {
+  gapi.client.setApiKey(apiKey);
+  gapi.client.load('storage', API_VERSION);
+  gapi.load('auth2', function () {
+    // Retrieve the singleton for the GoogleAuth library and set up the client.
+    var auth2 = gapi.auth2.init({
+      client_id: clientId,
+      cookiepolicy: 'single_host_origin',
+      scope: scopes
+    });
+
+    auth2.attachClickHandler(document.getElementById('sign-in-button'), {},
+      onSignIn, function (error) {
+        console.error(error);
+      });
+  });
+}
+
 function onSignIn(googleUser) {
   document.getElementById('sign-in-button').style.display = 'none';
   document.getElementById('sign-out-button').style.display = 'block';
@@ -21,6 +50,8 @@ function onSignIn(googleUser) {
 //  document.getElementById('user-email').innerHTML = profile.getEmail();
   document.getElementById('user-avatar').style.display = 'block';
   document.getElementById('user-avatar').src = profile.getImageUrl();
+
+  refreshUserProjects();
 }
 
 function signOut() {
@@ -34,6 +65,33 @@ function signOut() {
     document.getElementById('user-avatar').style.display = 'none';
     document.getElementById('user-avatar').src = null;
   });
+}
+
+function refreshUserProjects() {
+  var request = gapi.client.storage.objects.list({
+      'bucket': 'zig'
+    });
+  request.execute(function(response) {
+    var div = document.getElementById('user-projects');
+    for (var i = 0; i < response.items.length; i++) {
+      var item = response.items[i];
+      if (endsWith(item.name, '/index.html')) {
+        var shortName = item.name.substr(item.name, item.name.length - 11);
+        var childDiv = document.createElement('div');
+        childDiv.innerHTML = '<a href="https://storage.googleapis.com/zig/' +
+                        item.name+ '">' + shortName +
+                        '</a> <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
+                        shortName + '/app.json">(edit)</a>\n';
+        div.appendChild(childDiv);
+      }
+    }
+
+    console.log(JSON.stringify(response));
+  });
+}
+
+function endsWith(str, suffix) {
+  return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 </script>     
 </body>
