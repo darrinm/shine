@@ -55,7 +55,7 @@ function onLoad() {
           }
       });
 
-      auth2.attachClickHandler(document.getElementById('sign-in-button'), {},
+      auth2.attachClickHandler($('#sign-in-button')[0], {},
         onSignIn, function (error) {
           console.error(error);
         });
@@ -64,16 +64,16 @@ function onLoad() {
 }
 
 function onSignIn(googleUser) {
-  document.getElementById('sign-in-button').style.display = 'none';
-  document.getElementById('sign-out-button').style.display = 'block';
+  $('#sign-in-button').hide();
+  $('#sign-out-button').show();
   var profile = googleUser.getBasicProfile();
-//  document.getElementById('user-id').innerHTML = profile.getId();
-  document.getElementById('user-name').innerHTML = profile.getName();
-//  document.getElementById('user-email').innerHTML = profile.getEmail();
-  document.getElementById('user-avatar').style.display = 'block';
-  document.getElementById('user-avatar').src = profile.getImageUrl();
-  document.getElementById('user-projects').style.display = 'block';
-  document.getElementById('create-project-button').style.display = 'block';
+//  $('#user-id').html(profile.getId());
+  $('#user-name').html(profile.getName());
+//  $('#user-email').html(profile.getEmail());
+  $('#user-avatar').show();
+  $('#user-avatar').attr('src', profile.getImageUrl());
+  $('#user-projects').show();
+  $('#create-project-button').show();
 
   refreshUserProjects();
 }
@@ -81,14 +81,14 @@ function onSignIn(googleUser) {
 function signOut() {
   var auth2 = gapi.auth2.getAuthInstance();
   auth2.signOut().then(function () {
-    document.getElementById('sign-in-button').style.display = 'block';
-    document.getElementById('sign-out-button').style.display = 'none';
-//    document.getElementById('user-id').innerHTML = "";
-    document.getElementById('user-name').innerHTML = "";
-//    document.getElementById('user-email').innerHTML = "";
-    document.getElementById('user-avatar').style.display = 'none';
-    document.getElementById('user-projects').style.display = 'none';
-    document.getElementById('create-project-button').style.display = 'none';
+    $('#sign-in-button').show();
+    $('#sign-out-button').hide();
+//    $('#user-id').html("");
+    $('#user-name').html("");
+//    $('#user-email').html("");
+    $('#user-avatar').hide();
+    $('#user-projects').hide();
+    $('#create-project-button').hide();
     $('#user-projects').empty();
   });
 }
@@ -102,7 +102,7 @@ function refreshUserProjects() {
       'bucket': 'zig'
     });
   request.execute(function(response) {
-    var div = document.getElementById('user-projects');
+    var div = $('#user-projects')[0];
     for (var i = 0; i < response.items.length; i++) {
       var item = response.items[i];
       if (endsWith(item.name, '/index.html')) {
