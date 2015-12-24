@@ -23,12 +23,31 @@
     <a id="sign-out-button" href="#" style="display: none" onclick="signOut();">Sign out</a>
   </div>
   <div>
-    <button id="create-project-button" style="display: none" onclick="createProject();">Create new project</button>
+    <button id="create-project-button" style="display: none" onclick="createProject();">Create New Project</button>
     <div id="user-projects" style="display: none">
       <h4>My Projects</h4>
       <div id="user-project-list"></div>
     </div>
   </div>
+
+  <!-- Create Project modal dialog -->
+  <div id="create-project-dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="gridSystemModalLabel">Choose a Template</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary">Create Project</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <script>
 var PROJECT = 'shine-1164';
@@ -90,19 +109,36 @@ function signOut() {
     $('#user-avatar').hide();
     $('#user-projects').hide();
     $('#create-project-button').hide();
-    $('#user-project-list').empty();
   });
 }
 
 function createProject() {
-
+  $('#create-project-dialog').on('show.bs.modal', function (e) {
+    getProjectTemplates(function (templates) {
+      $('#create-project-dialog .modal-body').empty();
+      var div = $('#create-project-dialog .modal-body')[0];
+      var list = document.createElement('ul');
+      div.appendChild(list);
+      for (var i = 0; i < templates.length; i++) {
+        var item = templates[i];
+        var shortName = item.name.substr(item.name, item.name.length - 9);
+        var childItem = document.createElement('li');
+        childItem.className = 'list-group-item';
+        childItem.innerHTML = shortName;
+        list.appendChild(childItem);
+      }
+      childItem.className += ' active';
+    });
+  });
+  $('#create-project-dialog').modal();
 }
 
 function refreshUserProjects() {
   var request = gapi.client.storage.objects.list({
       'bucket': 'zig'
     });
-  request.execute(function(response) {
+  request.execute(function (response) {
+    $('#user-project-list').empty();
     var div = $('#user-project-list')[0];
     for (var i = 0; i < response.items.length; i++) {
       var item = response.items[i];
@@ -118,6 +154,21 @@ function refreshUserProjects() {
     }
 
     console.log(JSON.stringify(response));
+  });
+}
+
+function getProjectTemplates(callback) {
+  var request = gapi.client.storage.objects.list({
+      'bucket': 'zig'
+    });
+  request.execute(function (response) {
+    var templates = [];
+    for (var i = 0; i < response.items.length; i++) {
+      var item = response.items[i];
+      if (endsWith(item.name, '/app.json'))
+        templates.push(item)
+    }
+    callback(templates);
   });
 }
 
