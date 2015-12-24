@@ -26,6 +26,7 @@
     <button id="create-project-button" style="display: none" onclick="createProject();">Create new project</button>
     <div id="user-projects" style="display: none">
       <h4>My Projects</h4>
+      <div id="user-project-list"></div>
     </div>
   </div>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
@@ -89,7 +90,7 @@ function signOut() {
     $('#user-avatar').hide();
     $('#user-projects').hide();
     $('#create-project-button').hide();
-    $('#user-projects').empty();
+    $('#user-project-list').empty();
   });
 }
 
@@ -102,7 +103,7 @@ function refreshUserProjects() {
       'bucket': 'zig'
     });
   request.execute(function(response) {
-    var div = $('#user-projects')[0];
+    var div = $('#user-project-list')[0];
     for (var i = 0; i < response.items.length; i++) {
       var item = response.items[i];
       if (endsWith(item.name, '/index.html')) {
