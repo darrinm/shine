@@ -50,7 +50,7 @@
 
   <div style="display: none">
     <!-- Project thumbnail template -->
-    <div id="project-thumbnail-template" style="display:inline-block; padding: 10px">
+    <div id="project-thumbnail-template" style="width:130px; display:inline-block; padding:10px">
       <a href="#" class="thumbnail">
         <img class="img-thumbnail">
       </a>
@@ -128,16 +128,16 @@ function createProject() {
   $('#create-project-dialog').on('show.bs.modal', function (e) {
     getProjectTemplates(function (templates) {
       $('#create-project-dialog .modal-body').empty();
-      var div = $('#create-project-dialog .modal-body')[0];
-      var list = document.createElement('ul');
-      div.appendChild(list);
+      var div = $('#create-project-dialog .modal-body');
+
       for (var i = 0; i < templates.length; i++) {
         var item = templates[i];
         var shortName = item.name.substr(item.name, item.name.length - 9);
-        var childItem = document.createElement('li');
-        childItem.className = 'list-group-item';
-        childItem.innerHTML = shortName;
-        list.appendChild(childItem);
+        var childDiv = $('#project-thumbnail-template').clone();
+        childDiv.removeAttr('id');
+        var header = childDiv.find(':header');
+        header.html(shortName);
+        div.append(childDiv);
       }
       childItem.className += ' active';
     });
@@ -157,6 +157,7 @@ function refreshUserProjects() {
       if (endsWith(item.name, '/index.html')) {
         var shortName = item.name.substr(item.name, item.name.length - 11);
         var childDiv = $('#project-thumbnail-template').clone();
+        childDiv.removeAttr('id');
         var anchor = childDiv.find('a');
         anchor.attr('href', 'https://storage.googleapis.com/zig/' + item.name);
         var header = childDiv.find(':header');
@@ -165,8 +166,6 @@ function refreshUserProjects() {
         div.append(childDiv);
       }
     }
-
-    console.log(JSON.stringify(response));
   });
 }
 
