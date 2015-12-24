@@ -25,19 +25,27 @@ var scopes = 'https://www.googleapis.com/auth/devstorage.read_write';
 
 function onLoad() {
   gapi.client.setApiKey(apiKey);
-  gapi.client.load('storage', API_VERSION);
-  gapi.load('auth2', function () {
-    // Retrieve the singleton for the GoogleAuth library and set up the client.
-    var auth2 = gapi.auth2.init({
-      client_id: clientId,
-      cookiepolicy: 'single_host_origin',
-      scope: scopes
-    });
-
-    auth2.attachClickHandler(document.getElementById('sign-in-button'), {},
-      onSignIn, function (error) {
-        console.error(error);
+  gapi.client.load('storage', API_VERSION).then(function () {
+    gapi.load('auth2', function () {
+      var auth2 = gapi.auth2.init({
+        client_id: clientId,
+        cookiepolicy: 'single_host_origin',
+        scope: scopes
       });
+
+      auth2.signIn({
+        prompt: false
+      }).then(function () {
+          if (auth2.isSignedIn.get()) {
+            onSignIn(auth2.currentUser.get());
+          }
+      });
+
+      auth2.attachClickHandler(document.getElementById('sign-in-button'), {},
+        onSignIn, function (error) {
+          console.error(error);
+        });
+    });
   });
 }
 
@@ -50,6 +58,7 @@ function onSignIn(googleUser) {
 //  document.getElementById('user-email').innerHTML = profile.getEmail();
   document.getElementById('user-avatar').style.display = 'block';
   document.getElementById('user-avatar').src = profile.getImageUrl();
+  document.getElementById('user-projects').style.display = 'block';
 
   refreshUserProjects();
 }
@@ -63,7 +72,7 @@ function signOut() {
     document.getElementById('user-name').innerHTML = "";
 //    document.getElementById('user-email').innerHTML = "";
     document.getElementById('user-avatar').style.display = 'none';
-    document.getElementById('user-avatar').src = null;
+    document.getElementById('user-projects').style.display = 'none';
   });
 }
 
