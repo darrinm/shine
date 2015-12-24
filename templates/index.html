@@ -15,6 +15,11 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
+<style>
+.project-thumbnail { background-color: none; }
+.project-thumbnail.active { background-color: #ccc; }
+</style>
+
 </head>
 <body onload="onLoad()" style="padding: 10px">
   <div style="float: right">
@@ -42,7 +47,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary">Create Project</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Create Project</button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
@@ -50,7 +55,7 @@
 
   <div style="display: none">
     <!-- Project thumbnail template -->
-    <div id="project-thumbnail-template" style="width:130px; display:inline-block; padding:10px">
+    <div id="project-thumbnail-template" class="project-thumbnail" style="width:130px; display:inline-block; padding:10px">
       <a href="#" class="thumbnail">
         <img class="img-thumbnail">
       </a>
@@ -67,7 +72,6 @@ var clientId = '1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleuserco
 var apiKey = 'AIzaSyD0CErkFNxMqKzJm7xf4OOe7sjXYOg__PU';
 var API_VERSION = 'v1';
 var scopes = 'https://www.googleapis.com/auth/devstorage.read_write';
-
 
 function onLoad() {
   gapi.client.setApiKey(apiKey);
@@ -126,6 +130,24 @@ function signOut() {
 
 function createProject() {
   $('#create-project-dialog').on('show.bs.modal', function (e) {
+    var $dialog = $(this);
+    var primaryButton = $(this).find('.btn-primary');
+    var selectedItem = null;
+    primaryButton.prop('disabled', true);
+    $(this).on('item-selected', function (event, item) {
+      // Enable the create project button.
+      primaryButton.prop('disabled', false);
+      selectedItem = item;
+    });
+    primaryButton.click(function () {
+      console.log($(selectedItem).attr('data-name'));
+      // clone template as a new user project
+      // refresh user projects
+      // ? add "Project Name: " input field to dialog?
+      //   populate with template name + " Copy [N]"
+      // ? select project name for editing?
+    });
+
     getProjectTemplates(function (templates) {
       $('#create-project-dialog .modal-body').empty();
       var div = $('#create-project-dialog .modal-body');
@@ -135,11 +157,17 @@ function createProject() {
         var shortName = item.name.substr(item.name, item.name.length - 9);
         var childDiv = $('#project-thumbnail-template').clone();
         childDiv.removeAttr('id');
+        childDiv.attr('data-name', shortName);
+
+        childDiv.click(function () {
+          $(this).siblings().removeClass('active');
+          $(this).addClass('active');
+          $(this).trigger('item-selected', [ this ]);
+        });
         var header = childDiv.find(':header');
         header.html(shortName);
         div.append(childDiv);
       }
-      childItem.className += ' active';
     });
   });
   $('#create-project-dialog').modal();
