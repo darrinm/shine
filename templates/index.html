@@ -24,7 +24,7 @@
   </div>
   <div>
     <button id="create-project-button" style="display: none" onclick="createProject();">Create new project</button>
-    <div id="user-projects">
+    <div id="user-projects" style="display: none">
       <h4>My Projects</h4>
     </div>
   </div>
@@ -89,6 +89,7 @@ function signOut() {
     document.getElementById('user-avatar').style.display = 'none';
     document.getElementById('user-projects').style.display = 'none';
     document.getElementById('create-project-button').style.display = 'none';
+    $('#user-projects').empty();
   });
 }
 
