@@ -26,7 +26,7 @@
     <button id="create-project-button" style="display: none" onclick="createProject();">Create New Project</button>
     <div id="user-projects" style="display: none">
       <h4>My Projects</h4>
-      <div id="user-project-list"></div>
+      <div id="user-project-list"</div>
     </div>
   </div>
 
@@ -47,6 +47,18 @@
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
+
+  <div style="display: none">
+    <!-- Project thumbnail template -->
+    <div id="project-thumbnail-template" style="display:inline-block; padding: 10px">
+      <a href="#" class="thumbnail">
+        <img class="img-thumbnail">
+      </a>
+      <div class="caption">
+        <h5>Thumbnail label</h5>
+      </div>
+    </div>
+  </div>
 
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <script>
@@ -139,17 +151,18 @@ function refreshUserProjects() {
     });
   request.execute(function (response) {
     $('#user-project-list').empty();
-    var div = $('#user-project-list')[0];
+    var div = $('#user-project-list');
     for (var i = 0; i < response.items.length; i++) {
       var item = response.items[i];
       if (endsWith(item.name, '/index.html')) {
         var shortName = item.name.substr(item.name, item.name.length - 11);
-        var childDiv = document.createElement('div');
-        childDiv.innerHTML = '<a href="https://storage.googleapis.com/zig/' +
-            item.name+ '">' + shortName +
-            '</a> <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
-            shortName + '/app.json">(edit)</a>\n';
-        div.appendChild(childDiv);
+        var childDiv = $('#project-thumbnail-template').clone();
+        var anchor = childDiv.find('a');
+        anchor.attr('href', 'https://storage.googleapis.com/zig/' + item.name);
+        var header = childDiv.find(':header');
+        header.html(shortName + ' <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
+            shortName + '/app.json">(edit)</a>\n');
+        div.append(childDiv);
       }
     }
 
