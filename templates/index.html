@@ -14,7 +14,9 @@
    <a id="sign-in-button" href="#">Sign in</a>
     <a id="sign-out-button" href="#" style="display: none" onclick="signOut();">Sign out</a>
   </div>
+  <button id="create-project-button" style="display: none" onclick="createProject();">Create new project</button>
   <div id="user-projects"></div>
+  
 <script>
 var PROJECT = 'shine-1164';
 var clientId = '1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleusercontent.com';
@@ -59,6 +61,7 @@ function onSignIn(googleUser) {
   document.getElementById('user-avatar').style.display = 'block';
   document.getElementById('user-avatar').src = profile.getImageUrl();
   document.getElementById('user-projects').style.display = 'block';
+  document.getElementById('create-project-button').style.display = 'block';
 
   refreshUserProjects();
 }
@@ -73,7 +76,12 @@ function signOut() {
 //    document.getElementById('user-email').innerHTML = "";
     document.getElementById('user-avatar').style.display = 'none';
     document.getElementById('user-projects').style.display = 'none';
+    document.getElementById('create-project-button').style.display = 'none';
   });
+}
+
+function createProject() {
+
 }
 
 function refreshUserProjects() {
