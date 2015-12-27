@@ -3,6 +3,7 @@
 import json
 from apiclient import discovery
 from oauth2client.client import GoogleCredentials
+from flask import request
 
 # Import the Flask Framework
 from flask import Flask, render_template
@@ -10,17 +11,67 @@ app = Flask(__name__)
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
 
+FILE_BUCKET = 'zig'
+
 
 @app.route('/')
 def index():
     """Return a list of the hosted projects."""
     return render_template('index.html')
 
+# copy?src=templates/project&dst=project&user-token=token
+@app.route('/copy')
+def copy():
+    source = request.args.get('src', '')
+    destination = request.args.get('dst', '')
+    print source, destination
+
+    # Get the application default credentials. When running locally, these are
+    # available after running `gcloud init`. When running on compute
+    # engine, these are available from the environment.
+    credentials = GoogleCredentials.get_application_default()
+    # TODO: error handling
+
+    # Construct the service object for interacting with the Cloud Storage API -
+    # the 'storage' service, at version 'v1'.
+    # You can browse other available api services and versions here:
+    #     https://developers.google.com/api-client-library/python/apis/
+    service = discovery.build('storage', 'v1', credentials=credentials)
+    # TODO: error handling
+
+    fields_to_return = \
+            'nextPageToken,items(name,size,contentType,metadata(my-key))'
+    req = service.objects().list(bucket=FILE_BUCKET, fields=fields_to_return, prefix=source + '/')
+    # TODO: error handling
+
+    while req:
+        resp = req.execute()
+        # TODO: error handling
+        json_items = resp['items']
+        for item in json_items:
+            print item['name']
+            file_name = item['name'][len(source) + 1:]
+            print file_name
+            req2 = service.objects().copy(
+                    sourceBucket=FILE_BUCKET,
+                    sourceObject=item['name'],
+                    destinationBucket=FILE_BUCKET,
+                    destinationObject='fakeuser/' + destination + '/' + file_name,
+                    body={})
+            # TODO: error handling
+            resp2 = req2.execute()
+            # TODO: error handling
+
+        req = service.objects().list_next(req, resp)
+        # TODO: error handling
+
+    return ""
+
 
 @app.route('/projects')
 def projects():
     """Return a list of the hosted projects."""
-    return list_objects('zig')
+    return list_objects(FILE_BUCKET)
 
 
 @app.errorhandler(404)
@@ -40,29 +91,27 @@ def list_objects(bucket):
     # available after running `gcloud init`. When running on compute
     # engine, these are available from the environment.
     credentials = GoogleCredentials.get_application_default()
+    # TODO: error handling
 
     # Construct the service object for interacting with the Cloud Storage API -
     # the 'storage' service, at version 'v1'.
     # You can browse other available api services and versions here:
     #     https://developers.google.com/api-client-library/python/apis/
     service = discovery.build('storage', 'v1', credentials=credentials)
-
-    # Make a request to buckets.get to retrieve a list of objects in the
-    # specified bucket.
-    req = service.buckets().get(bucket=bucket)
-    resp = req.execute()
-    #list_string = json.dumps(resp, indent=2)
+    # TODO: error handling
 
     # Create a request to objects.list to retrieve a list of objects.
     fields_to_return = \
-        'nextPageToken,items(name,size,contentType,metadata(my-key))'
+            'nextPageToken,items(name,size,contentType,metadata(my-key))'
     req = service.objects().list(bucket=bucket, fields=fields_to_return)
+    # TODO: error handling
 
     # If you have too many items to list in one request, list_next() will
     # automatically handle paging with the pageToken.
     list_string = ''
     while req:
         resp = req.execute()
+        # TODO: error handling
         #list_string = list_string + json
         json_items = resp['items']
         for item in json_items:
@@ -73,5 +122,6 @@ def list_objects(bucket):
                         item['name'][:-11] + '/app.json">(edit)</a><p>\n')
         #list_string = list_string + json.dumps(resp, indent=2)
         req = service.objects().list_next(req, resp)
+        # TODO: error handling
 
     return list_string
