@@ -4,6 +4,7 @@ import json
 from apiclient import discovery
 from oauth2client.client import GoogleCredentials
 from flask import request
+import cloudstorage as gcs
 
 # Import the Flask Framework
 from flask import Flask, render_template
@@ -66,6 +67,21 @@ def copy():
         # TODO: error handling
 
     return ""
+
+#@app.route('/<user_name>/<project_name>/play')
+#def play(user_name, project_name):
+#    # 307 = Temporary Redirect (keep requesting from original URI)
+#    return redirect('https://storage.cloud.google.com/zig/%s/%s/index.html' % (user_name, project_name), code=307)\
+
+@app.route('/<user_name>/<project_name>/play/<path:file_path>')
+def play(user_name, project_name, file_path):
+    # 307 = Temporary Redirect (keep requesting from original URI)
+    # TODO: GoogleCredentials.get_access_token
+    gcs.common.set_access_token('ya29.WAI_M3etQTXEBtUUKdpnoZPJhFzBHZ2LoAaJ9hMdDQmDf1LoKVlViwZurHv4E2NthlY4dQ')
+    gcs_file = gcs.open('/%s/%s/%s/%s' % (FILE_BUCKET, user_name, project_name, file_path))
+    data = gcs_file.read()
+    gcs_file.close()
+    return data
 
 
 @app.route('/projects')
