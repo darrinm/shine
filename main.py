@@ -13,19 +13,30 @@ app = Flask(__name__)
 # the App Engine WSGI application server.
 
 FILE_BUCKET = 'zig'
-
+PUBLISHED_BUCKET = 'all.spiffthings.com'
 
 @app.route('/')
 def index():
-    """Return a list of the hosted projects."""
+    """Return the home page."""
     return render_template('index.html')
+
+@app.route('/<user_name>')
+def person(user_name):
+    """Return the person page for the specified user."""
+    return render_template('person.html', user_name=user_name)
+
+@app.route('/<user_name>/<project_name>')
+def project(user_name, project_name):
+    """Return the project page for the specified user's specified project."""
+    return render_template('project.html', user_name=user_name, project_name=project_name)
 
 # copy?src=templates/project&dst=project&user-token=token
 @app.route('/copy')
 def copy():
     source = request.args.get('src', '')
     destination = request.args.get('dst', '')
-    print source, destination
+    user_token = request.args.get('user-token', '')
+    print 'source: %s, destination: %s, user_token: %s' % (source, destination, user_token)
 
     # Get the application default credentials. When running locally, these are
     # available after running `gcloud init`. When running on compute
@@ -53,6 +64,7 @@ def copy():
             print item['name']
             file_name = item['name'][len(source) + 1:]
             print file_name
+            # TODO: use authenticated username
             req2 = service.objects().copy(
                     sourceBucket=FILE_BUCKET,
                     sourceObject=item['name'],
