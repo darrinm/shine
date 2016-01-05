@@ -198,6 +198,13 @@ function refreshUserProjects() {
         childDiv.removeAttr('id');
         var anchor = childDiv.find('a');
         anchor.attr('href', 'fakeuser/' + shortNameMinusUser + '/play/' + 'index.html');
+        /*
+        var img = childDiv.find('img');
+        img.attr('src', 'http://placehold.it/130x130');
+        //img.attr('src', 'http://fpoimg.com/130x130?text=' + shortNameMinusUser);
+        //img.attr('src', 'http://loremflickr.com/130/130?' + shortNameMinusUser);
+        */
+
         var header = childDiv.find(':header');
         header.html(shortNameMinusUser + ' <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
             shortName + '/app.json">(edit)</a>\n');
