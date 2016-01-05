@@ -37,7 +37,6 @@ def filemanager():
     content, whatever, content_type = handler(request)
     return Response(content, mimetype=content_type)
 
-
 # copy?src=templates/project&dst=project&user-token=token
 @app.route('/copy')
 def copy():

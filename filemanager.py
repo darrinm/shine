@@ -123,15 +123,15 @@ class Filemanager:
         if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
 
-        result = ''
+        result = []
         path = 'fm/userfiles/' # TODO:
         filelist = os.listdir(path)
 
         for i in filelist:
              if i[0] != '.':
-                result += '"' + (path + i) + '": ' + self.getinfo(path + i, getsize=getsizes, req=req)[0] + ',\n'
+                result.append('"' + (path + i) + '": ' + self.getinfo(path + i, getsize=getsizes, req=req)[0])
 
-        return ('{\n' + result + '}\n', None, 'application/json')
+        return ('{\n' + ',\n'.join(result) + '}\n', None, 'application/json')
         
     
     def rename(self, old=None, new=None, req=None):
