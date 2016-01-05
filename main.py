@@ -3,14 +3,16 @@
 import json
 from apiclient import discovery
 from oauth2client.client import GoogleCredentials
-from flask import request
+from flask import request, Response
 import cloudstorage as gcs
+from filemanager import handler
 
 # Import the Flask Framework
 from flask import Flask, render_template
 app = Flask(__name__)
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
+
 
 FILE_BUCKET = 'zig'
 PUBLISHED_BUCKET = 'all.spiffthings.com'
@@ -29,6 +31,12 @@ def person(user_name):
 def project(user_name, project_name):
     """Return the project page for the specified user's specified project."""
     return render_template('project.html', user_name=user_name, project_name=project_name)
+
+@app.route('/fm/connectors/py/filemanager.py')
+def filemanager():
+    content, whatever, content_type = handler(request)
+    return Response(content, mimetype=content_type)
+
 
 # copy?src=templates/project&dst=project&user-token=token
 @app.route('/copy')

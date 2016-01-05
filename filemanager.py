@@ -7,11 +7,6 @@ from contextlib import closing, contextmanager
 import os, sys, traceback
 import os.path
 
-from mod_python import apache, util
-from util import parse_qs
-
-today = date.today
-
 ver = sys.version_info
 if ver[0]<2 and ver[1]<5:
     raise EnvironmentError('Must have Python version 2.5 or higher.')
@@ -23,23 +18,22 @@ except ImportError:
     raise EnvironmentError('Must have the json module.  (It is included in Python 2.6 or can be installed on version 2.5.)')
 
 
+'''
 try:
     from PIL import Image
 except ImportError:
     raise EnvironmentError('Must have the PIL (Python Imaging Library).')
-    
+'''
 
 path_exists = os.path.exists
 normalize_path = os.path.normpath
 absolute_path = os.path.abspath 
-make_url = urlparse.urljoin
 split_path = os.path.split
 split_ext = os.path.splitext
 
 
-euncode_urlpath = urllib.quote_plus
 
-encode_json = json.JSONEcoder().encode
+encode_json = json.JSONEncoder().encode
 
 
 def encodeURLsafeBase64(data):
@@ -68,13 +62,14 @@ class Filemanager:
                 
         assert split_path(kwargs['path'])[0]==self.fileroot
         assert not kwargs['req'] is None
+        return True
         
 
 
-    def getinfo(self, path=None, getsize=true, req=None):
+    def getinfo(self, path=None, getsize=True, req=None):
         """Returns a JSON object containing information about the given file."""
 
-        if not self.isvalidrequest(path,req):
+        if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
 
         thefile = {
@@ -119,25 +114,23 @@ class Filemanager:
         thefile['Properties']['Date Modified'] = os.path.getmtime(path) 
         thefile['Properties']['Size'] = os.path.getsize(path)
 
-        req.content_type('application/json')
-        req.write(encode_json(thefile))
+        return (encode_json(thefile), None, 'application/json')
+        
 
-
-    def getfolder(self, path=None, getsizes=true, req=None):
+    def getfolder(self, path=None, getsizes=True, req=None):
     
-        if not self.isvalidrequest(path,req):
+        if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
 
         result = []         
-        filtlist = file_listdirectory(path)
+        filelist = os.listdir(path)
 
         for i in filelist:
              if i[0]=='.':
                 result += literal(self.getinfo(path + i, getsize=getsizes))
 
-        req.content_type('application/json')
-        req.write(encode_json(result))
-    
+        return (encode_json(result), None, 'application/json')
+        
     
     def rename(self, old=None, new=None, req=None):
                 
@@ -167,13 +160,12 @@ class Filemanager:
             'Error' : 'There was an error renaming the file.' # todo: get the actual error
         }
         
-        req.content_type('application/json')
-        req.write(encode_json(result))
+        return (encode_json(result), None, 'application/json')
     
 
     def delete(self, path=None, req=None):
     
-        if not self.isvalidrequest(path,req):
+        if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
 
         os.path.remove(path)
@@ -183,13 +175,12 @@ class Filemanager:
             'Error' : 'There was an error renaming the file.' # todo: get the actual error
         }
         
-        req.content_type('application/json')
-        req.write(encode_json(result))
+        return (encode_json(result), None, 'application/json')
     
     
     def add(self, path=None, req=None):     
 
-        if not self.isvalidrequest(path,req):
+        if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
         
     
@@ -215,13 +206,12 @@ class Filemanager:
                 'Error' : 'No file was uploaded.'
             }
     
-        req.content_type('text/html')
-        req.write(('<textarea>' + encode_json(result) + '</textarea>'))
+        return (('<textarea>' + encode_json(result) + '</textarea>'), None, 'text/html')
         
     
     def addfolder(self, path, name):        
 
-        if not self.isvalidrequest(path,req):
+        if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
 
         newName = encode_urlpath(name)
@@ -241,7 +231,7 @@ class Filemanager:
     
     def download(self, path=None, req=None):
     
-        if not self.isvalidrequest(path,req):
+        if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
             
         name = path.split('/')[-1]
@@ -249,42 +239,28 @@ class Filemanager:
         req.content_type('application/x-download')
         req.filename=name
         req.sendfile(path)
+        # TODO:
 
     
 
 
 
-myFilemanager = Filemanager(fileroot='/var/www/html/dev/fmtest/UserFiles/') #modify fileroot as a needed
+myFilemanager = Filemanager(fileroot='/fm/userfiles') #modify fileroot as a needed
 
 
 def handler(req): 
-    #req.content_type = 'text/plain' 
-    #req.write("Hello World!") 
-
     if req.method == 'POST':
         kwargs = parse_qs(req.read())
     elif req.method == 'GET': 
-        kwargs = parse_qs(req.args)
+        kwargs = req.args.to_dict()
     
-    #oldid = os.getuid()
-    #os.setuid(501)
 
-    try:
-        method=str(kwargs['mode'][0])
-        methodKWargs=kwargs.remove('mode')
-        methodKWargs['req']=req
-        
-        myFilemanager.__dict__['method'](**methodKWargs)
-        
-        return apache.OK 
-
-
-    except KeyError:
-        return apache.HTTP_BAD_REQUEST   
-
-    except Exception, (errno, strerror):
-        apache.log_error(strerror, apache.APLOG_CRIT)
-        return apache.HTTP_INTERNAL_SERVER_ERROR
-
-    #os.setuid(oldid)
-
+    method=str(kwargs['mode'])
+    kwargs.pop('mode', None)
+    kwargs.pop('time', None)
+    kwargs.pop('showThumbs', None)
+    kwargs.pop('config', None)
+    kwargs['req']=req
+    print method, kwargs
+    
+    return getattr(myFilemanager, method)(**kwargs)
