@@ -140,13 +140,11 @@ function createProject() {
       selectedItem = item;
     });
     primaryButton.click(function () {
-      var template_dir = $(selectedItem).attr('data-name');
-      var project_name = template_dir.slice(template_dir.indexOf('/') + 1);
-      console.log(template_dir);
-      console.log(project_name);
+      var templateDir = $(selectedItem).attr('data-name');
+      var projectName = templateDir.slice(templateDir.indexOf('/') + 1);
 
       // Clone template as a new user project.
-      $.get('copy?src=' + template_dir + '&dst=' + project_name + '&user-token=fake', function (data) {
+      $.get('copy?src=' + templateDir + '&dst=' + projectName + '&user-token=fake', function (data) {
         // TODO: busy / progress indicator
         // TODO: error handling
         // refresh user projects
@@ -163,10 +161,10 @@ function createProject() {
 
       for (var i = 0; i < templates.length; i++) {
         var item = templates[i];
-        var shortName = item.name.substr(item.name, item.name.length - 9);
+        var templateDir = item.name.substr(item.name, item.name.length - 9);
         var childDiv = $('#project-thumbnail-template').clone();
         childDiv.removeAttr('id');
-        childDiv.attr('data-name', shortName);
+        childDiv.attr('data-name', templateDir);
 
         childDiv.click(function () {
           $(this).siblings().removeClass('active');
@@ -174,7 +172,7 @@ function createProject() {
           $(this).trigger('item-selected', [ this ]);
         });
         var header = childDiv.find(':header');
-        header.html(shortName);
+        header.html(templateDir.slice(templateDir.indexOf('/') + 1));
         div.append(childDiv);
       }
     });
