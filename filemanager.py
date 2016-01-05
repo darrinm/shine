@@ -60,7 +60,7 @@ class Filemanager:
     def isvalidrequest(self, **kwargs):
         """Returns an error if the given path is not within the specified root path."""
                 
-        assert split_path(kwargs['path'])[0]==self.fileroot
+        #assert split_path(kwargs['path'])[0]==self.fileroot
         assert not kwargs['req'] is None
         return True
         
@@ -88,7 +88,7 @@ class Filemanager:
                 }
             }
             
-        imagetypes = set('gif','jpg','jpeg','png')
+        imagetypes = ('gif','jpg','jpeg','png')
         
     
         if not path_exists(path):
@@ -99,7 +99,8 @@ class Filemanager:
         if split_path(path)[-1]=='/':
             thefile['File Type'] = 'Directory'
         else:
-            thefile['File Type'] = split_ext(path)
+            ext = split_ext(path)[1][1:]
+            thefile['File Type'] = ext
             
             if ext in imagetypes:
                 img = Image(path).size()
@@ -107,7 +108,7 @@ class Filemanager:
                 thefile['Properties']['Height'] = img[1]
                 
             else:
-                previewPath = 'images/fileicons/' + ext.upper + '.png'
+                previewPath = 'images/fileicons/' + ext.upper() + '.png'
                 thefile['Preview'] = previewPath if path_exists('../../' + previewPath) else 'images/fileicons/default.png'
         
         thefile['Properties']['Date Created'] = os.path.getctime(path) 
@@ -122,14 +123,15 @@ class Filemanager:
         if not self.isvalidrequest(path=path,req=req):
             return (self.patherror, None, 'application/json')
 
-        result = []         
+        result = ''
+        path = 'fm/userfiles/' # TODO:
         filelist = os.listdir(path)
 
         for i in filelist:
-             if i[0]=='.':
-                result += literal(self.getinfo(path + i, getsize=getsizes))
+             if i[0] != '.':
+                result += '"' + (path + i) + '": ' + self.getinfo(path + i, getsize=getsizes, req=req)[0] + ',\n'
 
-        return (encode_json(result), None, 'application/json')
+        return ('{\n' + result + '}\n', None, 'application/json')
         
     
     def rename(self, old=None, new=None, req=None):
