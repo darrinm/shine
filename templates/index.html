@@ -160,8 +160,8 @@ function createProject() {
       var div = $('#create-project-dialog .modal-body');
 
       for (var i = 0; i < templates.length; i++) {
-        var item = templates[i];
-        var templateDir = item.name.substr(item.name, item.name.length - 9);
+        var templateName = templates[i];
+        var templateDir = templateName;
         var childDiv = $('#project-thumbnail-template').clone();
         childDiv.removeAttr('id');
         childDiv.attr('data-name', templateDir);
@@ -182,49 +182,45 @@ function createProject() {
 
 function refreshUserProjects() {
   var request = gapi.client.storage.objects.list({
-      'bucket': 'zig', 'prefix': 'fakeuser/'
+      'bucket': 'zig', 'prefix': 'fakeuser/', 'delimiter': '/'
     });
   request.execute(function (response) {
     $('#user-project-list').empty();
     var div = $('#user-project-list');
-    if (response.items === undefined)
+    if (response.prefixes === undefined)
       return;
-    for (var i = 0; i < response.items.length; i++) {
-      var item = response.items[i];
-      if (endsWith(item.name, '/index.html')) {
-        var shortName = item.name.substr(item.name, item.name.length - 11);
-        var shortNameMinusUser = shortName.slice('fakeuser/'.length);
-        var childDiv = $('#project-thumbnail-template').clone();
-        childDiv.removeAttr('id');
-        var anchor = childDiv.find('a');
-        anchor.attr('href', 'fakeuser/' + shortNameMinusUser + '/play/' + 'index.html');
-        /*
-        var img = childDiv.find('img');
-        img.attr('src', 'http://placehold.it/130x130');
-        //img.attr('src', 'http://fpoimg.com/130x130?text=' + shortNameMinusUser);
-        //img.attr('src', 'http://loremflickr.com/130/130?' + shortNameMinusUser);
-        */
+    for (var i = 0; i < response.prefixes.length; i++) {
+      var projectPath = response.prefixes[i].substring(0, response.prefixes[i].length - 1);
+      var projectName = projectPath.slice('fakeuser/'.length);
+      var childDiv = $('#project-thumbnail-template').clone();
+      childDiv.removeAttr('id');
+      var anchor = childDiv.find('a');
+      anchor.attr('href', projectPath + '/play/' + 'index.html');
+      /*
+      var img = childDiv.find('img');
+      img.attr('src', 'http://placehold.it/130x130');
+      //img.attr('src', 'http://fpoimg.com/130x130?text=' + shortNameMinusUser);
+      //img.attr('src', 'http://loremflickr.com/130/130?' + shortNameMinusUser);
+      */
 
-        var header = childDiv.find(':header');
-        header.html(shortNameMinusUser + ' <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
-            shortName + '/app.json">(edit)</a>\n');
-        div.append(childDiv);
-      }
+      var header = childDiv.find(':header');
+      header.html(projectName + ' <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
+          projectPath + '/app.json">(edit)</a>\n');
+      div.append(childDiv);
     }
   });
 }
 
 function getProjectTemplates(callback) {
   var request = gapi.client.storage.objects.list({
-      'bucket': 'zig', 'prefix': 'project-templates/'
+      'bucket': 'zig', 'prefix': 'project-templates/', 'delimiter': '/'
     });
   request.execute(function (response) {
     var templates = [];
-    if (response.items) {
-      for (var i = 0; i < response.items.length; i++) {
-        var item = response.items[i];
-        if (endsWith(item.name, '/app.json'))
-          templates.push(item)
+    if (response.prefixes) {
+      for (var i = 0; i < response.prefixes.length; i++) {
+        var templateName = response.prefixes[i].substring(0, response.prefixes[i].length - 1);
+        templates.push(templateName);
       }
     }
     callback(templates);
