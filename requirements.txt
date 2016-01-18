@@ -7,3 +7,4 @@
 Flask==0.10
 google-api-python-client
 Pillow
+flask-login
