@@ -16,7 +16,7 @@ function createProject() {
       var projectName = templateDir.slice(templateDir.indexOf('/') + 1);
 
       // Clone template as a new user project.
-      $.get('copy?src=' + templateDir + '&dst=' + projectName + '&user-token=fake', function (data) {
+      $.get('copy?src=' + templateDir + '&dst=' + projectName + '&user-token=' + API_TOKEN, function (data) {
         // TODO: busy / progress indicator
         // TODO: error handling
         // refresh user projects

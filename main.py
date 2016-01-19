@@ -208,6 +208,7 @@ def copy():
     destination = request.args.get('dst', '')
     user_token = request.args.get('user-token', '')
     print 'source: %s, destination: %s, user_token: %s' % (source, destination, user_token)
+    user = User.verify_auth_token(user_token)
 
     # Get the application default credentials. When running locally, these are
     # available after running `gcloud init`. When running on compute
@@ -240,7 +241,7 @@ def copy():
                     sourceBucket=FILE_BUCKET,
                     sourceObject=item['name'],
                     destinationBucket=FILE_BUCKET,
-                    destinationObject='fakeuser/' + destination + '/' + file_name,
+                    destinationObject=user.id + '/' + destination + '/' + file_name,
                     body={})
             # TODO: error handling
             resp2 = req2.execute()
