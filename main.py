@@ -157,8 +157,8 @@ def get_auth_token():
 @app.route('/api/project')
 def list_projects():
     # TODO: automated
-    api_token = request.headers['authorization']
-    user = User.verify_auth_token(api_token)
+    auth_token = request.headers['authorization']
+    user = User.verify_auth_token(auth_token)
     credentials = GoogleCredentials.get_application_default()
     service = discovery.build('storage', 'v1', credentials=credentials)
     #fields_to_return = 'nextPageToken,items(name,size,contentType,metadata(my-key))'
@@ -178,8 +178,8 @@ def list_projects():
 @app.route('/api/template')
 def list_templates():
     # TODO: automated
-    api_token = request.headers['authorization']
-    user = User.verify_auth_token(api_token)
+    auth_token = request.headers['authorization']
+    user = User.verify_auth_token(auth_token)
     credentials = GoogleCredentials.get_application_default()
     service = discovery.build('storage', 'v1', credentials=credentials)
     #fields_to_return = 'nextPageToken,items(name,size,contentType,metadata(my-key))'
