@@ -1,8 +1,44 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="jumbotron">
-  <div class="container">
-    <h1>My Secure Site</h1>
+<div class="container">
+  {% if current_user.is_authenticated %}
+    <button id="create-project-button" onclick="createProject();">Create New Project</button>
+    <div id="user-projects">
+      <h4>My Projects</h4>
+      <div id="user-project-list"</div>
+    </div>
+  {% else %}
+    Sign in so you can create a project!
+  {% endif %}
+</div>
+
+<!-- Create Project modal dialog -->
+<div id="create-project-dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridSystemModalLabel">Choose a Template</h4>
+      </div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Create Project</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div style="display: none">
+  <!-- Project thumbnail template -->
+  <div id="project-thumbnail-template" class="project-thumbnail" style="width:130px; display:inline-block; padding:10px">
+    <a href="#" class="thumbnail">
+      <img src="http://placehold.it/130x130?text=Project">
+    </a>
+    <div class="caption">
+      <h5>Thumbnail label</h5>
+    </div>
   </div>
 </div>
 <div class="container">
