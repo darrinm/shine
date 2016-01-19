@@ -55,7 +55,11 @@
   {% endwith %}
 </div>
 <script>
+{% if current_user.is_authenticated %}
   var API_TOKEN = '{{ current_user.generate_auth_token() }}';
+{% else %}
+  var API_TOKEN = 'anonymous_user';
+{% endif %}
 </script>
 <script src="static/index.js"></script>
 {% endblock %}

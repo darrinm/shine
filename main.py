@@ -42,7 +42,11 @@ def project(user_name, project_name):
 #
 
 class User(UserMixin):
-    user_database = { 'darrin': ( 'darrin', 'abcdef', 'Darrin Massena' ), 'test': ( 'test', 'abcdef', 'Test Account' ) }
+    user_database = {
+        'darrin': ( 'darrin', 'abcdef', 'Darrin Massena' ),
+        'test': ( 'test', 'abcdef', 'Test Account' ),
+        'fakeuser': ( 'fakeuser', 'abcdef', 'Fake User' )
+    }
 
     def __init__(self, id, password, fullname=''):
         self.id = id
@@ -87,7 +91,7 @@ def login():
         user = User.get(username)
         if user.password == password:
             login_user(user)
-            g.user = user  # TODO: Needed?
+            #g.user = user  # TODO: Needed?
             flash('Welcome back {0}'.format(username)) # TODO: escape or whatever
             try:
                 next = request.form['next']
