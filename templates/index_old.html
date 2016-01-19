@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="google-signin-client_id" content="1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleusercontent.com">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <script src="https://apis.google.com/js/client.js"></script>
+
+  <title>Shine</title>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<style>
+.project-thumbnail { background-color: none; }
+.project-thumbnail.active { background-color: #ccc; }
+</style>
+
+</head>
+<body onload="onLoad()" style="padding: 10px">
+  <div style="float: right">
+    <div id="user-id"></div><div id="user-name"></div><div id="user-email"></div><div><img id="user-avatar" style="display: none"></img></div>
+    <a id="sign-in-button" href="#">Sign in</a>
+    <a id="sign-out-button" href="#" style="display: none" onclick="signOut();">Sign out</a>
+  </div>
+  <div>
+    <button id="create-project-button" style="display: none" onclick="createProject();">Create New Project</button>
+    <div id="user-projects" style="display: none">
+      <h4>My Projects</h4>
+      <div id="user-project-list"</div>
+    </div>
+  </div>
+
+  <!-- Create Project modal dialog -->
+  <div id="create-project-dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="gridSystemModalLabel">Choose a Template</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Create Project</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <div style="display: none">
+    <!-- Project thumbnail template -->
+    <div id="project-thumbnail-template" class="project-thumbnail" style="width:130px; display:inline-block; padding:10px">
+      <a href="#" class="thumbnail">
+        <img src="http://placehold.it/130x130?text=Project">
+      </a>
+      <div class="caption">
+        <h5>Thumbnail label</h5>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script>
+var PROJECT = 'shine-1164';
+var clientId = '1017798703472-v8bujes4qlhj4ju3q5883d974vqd1b4m.apps.googleusercontent.com';
+var apiKey = 'AIzaSyD0CErkFNxMqKzJm7xf4OOe7sjXYOg__PU';
+var API_VERSION = 'v1';
+var scopes = 'https://www.googleapis.com/auth/devstorage.read_write';
+
+function onLoad() {
+  gapi.client.setApiKey(apiKey);
+  gapi.client.load('storage', API_VERSION).then(function () {
+    gapi.load('auth2', function () {
+      var auth2 = gapi.auth2.init({
+        client_id: clientId,
+        cookiepolicy: 'single_host_origin',
+        scope: scopes
+      });
+
+      auth2.signIn({
+        prompt: false
+      }).then(function () {
+          if (auth2.isSignedIn.get()) {
+            onSignIn(auth2.currentUser.get());
+          }
+      });
+
+      auth2.attachClickHandler($('#sign-in-button')[0], {},
+        onSignIn, function (error) {
+          console.error(error);
+        });
+    });
+  });
+}
+
+function onSignIn(googleUser) {
+  $('#sign-in-button').hide();
+  $('#sign-out-button').show();
+  var profile = googleUser.getBasicProfile();
+//  $('#user-id').html(profile.getId());
+  $('#user-name').html(profile.getName());
+//  $('#user-email').html(profile.getEmail());
+  $('#user-avatar').show();
+  $('#user-avatar').attr('src', profile.getImageUrl());
+  $('#user-projects').show();
+  $('#create-project-button').show();
+
+  refreshUserProjects();
+}
+
+function signOut() {
+  var auth2 = gapi.auth2.getAuthInstance();
+  auth2.signOut().then(function () {
+    $('#sign-in-button').show();
+    $('#sign-out-button').hide();
+//    $('#user-id').html("");
+    $('#user-name').html("");
+//    $('#user-email').html("");
+    $('#user-avatar').hide();
+    $('#user-projects').hide();
+    $('#create-project-button').hide();
+  });
+}
+
+function createProject() {
+  $('#create-project-dialog').on('show.bs.modal', function (e) {
+    var $dialog = $(this);
+    var primaryButton = $(this).find('.btn-primary');
+    var selectedItem = null;
+    primaryButton.prop('disabled', true);
+    $(this).on('item-selected', function (event, item) {
+      // Enable the create project button.
+      primaryButton.prop('disabled', false);
+      selectedItem = item;
+    });
+    primaryButton.click(function () {
+      var templateDir = $(selectedItem).attr('data-name');
+      var projectName = templateDir.slice(templateDir.indexOf('/') + 1);
+
+      // Clone template as a new user project.
+      $.get('copy?src=' + templateDir + '&dst=' + projectName + '&user-token=fake', function (data) {
+        // TODO: busy / progress indicator
+        // TODO: error handling
+        // refresh user projects
+        refreshUserProjects();
+        // ? add "Project Name: " input field to dialog?
+        //   populate with template name + " Copy [N]"
+        // ? select project name for editing?
+      });
+  });
+
+    getProjectTemplates(function (templates) {
+      $('#create-project-dialog .modal-body').empty();
+      var div = $('#create-project-dialog .modal-body');
+
+      for (var i = 0; i < templates.length; i++) {
+        var templateName = templates[i];
+        var templateDir = templateName;
+        var childDiv = $('#project-thumbnail-template').clone();
+        childDiv.removeAttr('id');
+        childDiv.attr('data-name', templateDir);
+
+        childDiv.click(function () {
+          $(this).siblings().removeClass('active');
+          $(this).addClass('active');
+          $(this).trigger('item-selected', [ this ]);
+        });
+        var header = childDiv.find(':header');
+        header.html(templateDir.slice(templateDir.indexOf('/') + 1));
+        div.append(childDiv);
+      }
+    });
+  });
+  $('#create-project-dialog').modal();
+}
+
+function refreshUserProjects() {
+  var request = gapi.client.storage.objects.list({
+      'bucket': 'zig', 'prefix': 'fakeuser/', 'delimiter': '/'
+    });
+  request.execute(function (response) {
+    $('#user-project-list').empty();
+    var div = $('#user-project-list');
+    if (response.prefixes === undefined)
+      return;
+    for (var i = 0; i < response.prefixes.length; i++) {
+      var projectPath = response.prefixes[i].substring(0, response.prefixes[i].length - 1);
+      var projectName = projectPath.slice('fakeuser/'.length);
+      var childDiv = $('#project-thumbnail-template').clone();
+      childDiv.removeAttr('id');
+      var anchor = childDiv.find('a');
+      anchor.attr('href', projectPath + '/play/' + 'index.html');
+      /*
+      var img = childDiv.find('img');
+      img.attr('src', 'http://placehold.it/130x130');
+      //img.attr('src', 'http://fpoimg.com/130x130?text=' + shortNameMinusUser);
+      //img.attr('src', 'http://loremflickr.com/130/130?' + shortNameMinusUser);
+      */
+
+      var header = childDiv.find(':header');
+      header.html(projectName + ' <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
+          projectPath + '/app.json">(edit)</a>\n');
+      div.append(childDiv);
+    }
+  });
+}
+
+function getProjectTemplates(callback) {
+  var request = gapi.client.storage.objects.list({
+      'bucket': 'zig', 'prefix': 'project-templates/', 'delimiter': '/'
+    });
+  request.execute(function (response) {
+    var templates = [];
+    if (response.prefixes) {
+      for (var i = 0; i < response.prefixes.length; i++) {
+        var templateName = response.prefixes[i].substring(0, response.prefixes[i].length - 1);
+        templates.push(templateName);
+      }
+    }
+    callback(templates);
+  });
+}
+
+function endsWith(str, suffix) {
+  return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+</script>     
+</body>
+</html>

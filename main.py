@@ -3,19 +3,23 @@
 import json
 from apiclient import discovery
 from oauth2client.client import GoogleCredentials
-from flask import request, Response
+from flask import request, Response, abort, Flask, render_template, url_for, flash, redirect
 import cloudstorage as gcs
 from filemanager import handler
+from flask.ext.login import UserMixin, LoginManager, login_user, logout_user, login_required
 
-# Import the Flask Framework
-from flask import Flask, render_template
 app = Flask(__name__)
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
 
+app.secret_key = 'nevergonnaguessit' # Required for session management
 
 FILE_BUCKET = 'zig'
 PUBLISHED_BUCKET = 'all.spiffthings.com'
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 @app.route('/')
 def index():
@@ -31,6 +35,94 @@ def person(user_name):
 def project(user_name, project_name):
     """Return the project page for the specified user's specified project."""
     return render_template('project.html', user_name=user_name, project_name=project_name)
+
+#
+# User login stuff
+#
+
+class User(UserMixin):
+    user_database = { 'darrin': ( 'darrin', 'abcdef', 'Darrin Massena' ), 'test': ( 'test', 'abcdef', 'Test Account' ) }
+
+    def __init__(self, id, password, fullname=''):
+        self.id = id
+        self.password = password
+        self.fullname = fullname
+
+    @classmethod
+    def get(cls, id):
+        user_record =  cls.user_database.get(id)
+        if not user_record:
+            return None
+        return User(user_record[0], user_record[1], user_record[2])
+
+@login_manager.user_loader
+def user_loader(user_id):
+    return User.get(user_id)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html', next=request.args.get('next'))
+    elif request.method == 'POST':
+        username = request.form['txtUsername']
+        password = request.form['txtPassword']
+
+        user = User.get(username)
+        if user.password == password:
+            login_user(user)
+            flash('Welcome back {0}'.format(username)) # TODO: escape or whatever
+            try:
+                next = request.form['next']
+                return redirect(next)
+            except:
+                return redirect(url_for('index'))
+        else:
+            flash('Invalid login')
+            return redirect(url_for('login'))
+    else:
+        return abort(405)
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'GET':
+        return render_template('register.html')
+    elif request.method == 'POST':
+        pass
+    else:
+        abort(405)
+
+    # TODO: validate these!
+    # TODO: be sure they won't cause problems injected into HTML
+    username = request.form['txtUsername']
+    password = request.form['txtPassword']
+
+    user = User.get(username)
+    if user:
+        flash('The username {0} is already in use.  Please try a new username.'.format(username)) # TODO: escape or whatever
+        return redirect(url_for('register'))
+    else:
+        # TODO: fullname
+        user = User(id=username, password=password)
+        # TODO: save it somewhere
+        #db.session.add(user)
+        #db.session.commit()
+
+        flash('You have registered the username {0}. Please login'.format(username)) # TODO: escape or whatever
+        return redirect(url_for('login'))
+
+@app.route('/secret')
+@login_required
+def secret():
+    return render_template('secret.html')
+
+#
+# 
+#
 
 @app.route('/fm/connectors/py/filemanager.py')
 def filemanager():
