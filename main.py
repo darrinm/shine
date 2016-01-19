@@ -7,6 +7,7 @@ from flask import request, Response, abort, Flask, render_template, url_for, fla
 import cloudstorage as gcs
 from filemanager import handler
 from flask.ext.login import UserMixin, LoginManager, login_user, logout_user, login_required
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 
 app = Flask(__name__)
 # Note: We don't need to call run() since our application is embedded within
@@ -48,12 +49,28 @@ class User(UserMixin):
         self.password = password
         self.fullname = fullname
 
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(app.secret_key, expires_in=expiration)
+        return s.dumps({ 'id': self.id })
+
     @classmethod
     def get(cls, id):
         user_record =  cls.user_database.get(id)
         if not user_record:
             return None
         return User(user_record[0], user_record[1], user_record[2])
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(app.secret_key)
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None # valid token, but expired
+        except BadSignature:
+            return None # invalid token
+        user = User.get(data['id'])
+        return user
 
 @login_manager.user_loader
 def user_loader(user_id):
@@ -70,6 +87,7 @@ def login():
         user = User.get(username)
         if user.password == password:
             login_user(user)
+            g.user = user  # TODO: Needed?
             flash('Welcome back {0}'.format(username)) # TODO: escape or whatever
             try:
                 next = request.form['next']
@@ -121,7 +139,39 @@ def secret():
     return render_template('secret.html')
 
 #
-# 
+# API
+#
+'''
+@app.route('/api/token')
+@auth.login_required
+def get_auth_token():
+    token = g.user.generate_auth_token()
+    return jsonify({ 'token': token.decode('ascii') })
+'''
+
+#TODO: @auth.login_required (w/ api-token)
+@app.route('/api/project')
+def list_projects():
+    # TODO: automated
+    api_token = request.headers['authorization']
+    user = User.verify_auth_token(api_token)
+    credentials = GoogleCredentials.get_application_default()
+    service = discovery.build('storage', 'v1', credentials=credentials)
+    #fields_to_return = 'nextPageToken,items(name,size,contentType,metadata(my-key))'
+    req = service.objects().list(bucket=FILE_BUCKET, prefix=user.id + '/', delimiter='/')
+    prefixes = []
+    while req:
+        resp = req.execute()
+        # TODO: error handling
+        if 'prefixes' in resp:
+            prefixes.extend(resp['prefixes'])
+        req = service.objects().list_next(req, resp)
+        # TODO: error handling
+
+    return json.dumps(prefixes, indent=2)
+
+#
+#
 #
 
 @app.route('/fm/connectors/py/filemanager.py')

@@ -54,4 +54,8 @@
     {% endif %}
   {% endwith %}
 </div>
+<script>
+  var API_TOKEN = '{{ current_user.generate_auth_token() }}';
+</script>
+<script src="static/index.js"></script>
 {% endblock %}
