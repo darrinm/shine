@@ -170,6 +170,28 @@ def list_projects():
 
     return json.dumps(prefixes, indent=2)
 
+#TODO: @auth.login_required (w/ api-token)
+@app.route('/api/template')
+def list_templates():
+    # TODO: automated
+    api_token = request.headers['authorization']
+    user = User.verify_auth_token(api_token)
+    credentials = GoogleCredentials.get_application_default()
+    service = discovery.build('storage', 'v1', credentials=credentials)
+    #fields_to_return = 'nextPageToken,items(name,size,contentType,metadata(my-key))'
+    req = service.objects().list(bucket=FILE_BUCKET, prefix='project-templates/', delimiter='/')
+    prefixes = []
+    while req:
+        resp = req.execute()
+        # TODO: error handling
+        if 'prefixes' in resp:
+            for prefix in resp['prefixes']:
+                prefixes.append(prefix[:-1])
+        req = service.objects().list_next(req, resp)
+        # TODO: error handling
+
+    return json.dumps(prefixes, indent=2)
+
 #
 #
 #

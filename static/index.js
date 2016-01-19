@@ -89,18 +89,8 @@ function refreshUserProjects() {
 }
 
 function getProjectTemplates(callback) {
-  var request = gapi.client.storage.objects.list({
-      'bucket': 'zig', 'prefix': 'project-templates/', 'delimiter': '/'
-    });
-  request.execute(function (response) {
-    var templates = [];
-    if (response.prefixes) {
-      for (var i = 0; i < response.prefixes.length; i++) {
-        var templateName = response.prefixes[i].substring(0, response.prefixes[i].length - 1);
-        templates.push(templateName);
-      }
-    }
-    callback(templates);
+  API('api/template', function (data) {
+    callback(data)
   });
 }
 
