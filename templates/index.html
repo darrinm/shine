@@ -57,6 +57,7 @@
 <script>
 {% if current_user.is_authenticated %}
   var API_TOKEN = '{{ current_user.generate_auth_token() }}';
+  var USER_ID = '{{ current_user.id }}';
 {% else %}
   var API_TOKEN = 'anonymous_user';
 {% endif %}

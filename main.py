@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.secret_key = 'nevergonnaguessit' # Required for session management
 
 FILE_BUCKET = 'zig'
-PUBLISHED_BUCKET = 'all.spiffthings.com'
+PUBLISH_BUCKET = 'all.spiffthings.com'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -196,6 +196,42 @@ def list_templates():
 
     return json.dumps(prefixes, indent=2)
 
+#TODO: @auth.login_required (w/ api-token)
+@app.route('/api/publish/<project_name>')
+def publish_project(project_name):
+    # TODO: use task queue (and/or have watchAll trigger updates)
+    # TODO: clear out deleted files/dirs
+    # TODO: no rename: can't do atomic update (e.g. copy to temp, rename current old, rename temp current)
+    # TODO: only copy changes
+
+    # TODO: automate token verification
+    auth_token = request.headers['authorization']
+    user = User.verify_auth_token(auth_token)
+    credentials = GoogleCredentials.get_application_default()
+    service = discovery.build('storage', 'v1', credentials=credentials)
+    req = service.objects().list(bucket=FILE_BUCKET, prefix=user.id + '/' + project_name + '/')
+    while req:
+        resp = req.execute()
+        # TODO: error handling
+        json_items = resp['items']
+        for item in json_items:
+            file_name = item['name']
+            print file_name
+            req2 = service.objects().copy(
+                    sourceBucket=FILE_BUCKET,
+                    sourceObject=file_name,
+                    destinationBucket=PUBLISH_BUCKET,
+                    destinationObject=file_name,
+                    body={})
+            # TODO: error handling
+            resp2 = req2.execute()
+            # TODO: error handling
+
+        req = service.objects().list_next(req, resp)
+        # TODO: error handling
+
+    return '{}'
+
 #
 #
 #
@@ -240,7 +276,6 @@ def copy():
             print item['name']
             file_name = item['name'][len(source) + 1:]
             print file_name
-            # TODO: use authenticated username
             req2 = service.objects().copy(
                     sourceBucket=FILE_BUCKET,
                     sourceObject=item['name'],

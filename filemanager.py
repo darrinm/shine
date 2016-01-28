@@ -124,7 +124,7 @@ class Filemanager:
             return (self.patherror, None, 'application/json')
 
         result = []
-        path = 'fm/userfiles/' # TODO:
+        path = self.fileroot
         filelist = os.listdir(path)
 
         for i in filelist:

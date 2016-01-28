@@ -82,15 +82,25 @@ function refreshUserProjects() {
 
       var header = childDiv.find(':header');
       header.html(projectName + ' <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
-          projectPath + '/app.json">(edit)</a>\n');
+          projectPath + '/app.json">(edit)</a>\n' +
+          ' <a href="#" onclick="publishProject(\'' + projectName + '\')">(publish)</a>\n')
       div.append(childDiv);
     }
   });
 }
 
+function publishProject(projectName) {
+  API('api/publish/' + projectName, function (data) {
+    console.log('return from api/publish: ' + data);
+    window.open('http://all.spiffthings.com/' + USER_ID +'/' + projectName + '/index.html', projectName);
+  }, function (data) {
+    console.log('error from api/publish');
+  });
+}
+
 function getProjectTemplates(callback) {
   API('api/template', function (data) {
-    callback(data)
+    callback(data);
   });
 }
 
