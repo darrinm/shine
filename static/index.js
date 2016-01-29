@@ -10,10 +10,14 @@ function createProject() {
       // Enable the create project button.
       primaryButton.prop('disabled', false);
       selectedItem = item;
-    });
-    primaryButton.click(function () {
       var templateDir = $(selectedItem).attr('data-name');
       var projectName = templateDir.slice(templateDir.indexOf('/') + 1);
+      $('#project-name-input').val(projectName);
+    });
+
+    primaryButton.click(function () {
+      var templateDir = $(selectedItem).attr('data-name');
+      var projectName = $('#project-name-input').val();
 
       // Clone template as a new user project.
       $.get('copy?src=' + templateDir + '&dst=' + projectName + '&user-token=' + API_TOKEN, function (data) {

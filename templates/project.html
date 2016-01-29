@@ -2,13 +2,13 @@
 {% block content %}
 <div class="container">
   {% if current_user.is_authenticated %}
-  	<form method="post" id="upload-form" name="upload-form" onsubmit="uploadFormData('upload-form'); return false;">
-  	  <input type="file" name="file" id="file-input">
-  	  <input type="submit" value="Upload" name="submit">
-  	</form>
     <button id="publish-project-button" onclick="publishProject('{{ project_name }}');">Publish</button>
     <div id="project-files">
       <h4>Files</h4>
+      <form method="post" id="upload-form" name="upload-form" onsubmit="uploadFormData('upload-form'); return false;">
+        <input type="file" name="file" id="file-input">
+        <input type="submit" value="Upload" name="submit">
+      </form>
       <div id="project-file-list"</div>
     </div>
   {% else %}
