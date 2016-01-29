@@ -54,7 +54,7 @@ function createProject() {
 
 function API(URL, success, error) {
   $.ajax({
-    url: URL, type: 'GET', dataType: 'json', success: success, error: error,
+    url: '/api/' + URL, type: 'GET', dataType: 'json', success: success, error: error,
     beforeSend: function (xhr) {
       xhr.setRequestHeader('authorization', API_TOKEN);
     }
@@ -62,7 +62,7 @@ function API(URL, success, error) {
 }
 
 function refreshUserProjects() {
-  API('api/project', function (data) {
+  API('project', function (data) {
     $('#user-project-list').empty();
     var div = $('#user-project-list');
     for (var i = 0; i < data.length; i++) {
@@ -90,7 +90,7 @@ function refreshUserProjects() {
 }
 
 function publishProject(projectName) {
-  API('api/publish/' + projectName, function (data) {
+  API('publish/' + projectName, function (data) {
     console.log('return from api/publish: ' + data);
     window.open('http://all.spiffthings.com/' + USER_ID +'/' + projectName + '/index.html', projectName);
   }, function (data) {
@@ -99,7 +99,7 @@ function publishProject(projectName) {
 }
 
 function getProjectTemplates(callback) {
-  API('api/template', function (data) {
+  API('template', function (data) {
     callback(data);
   });
 }

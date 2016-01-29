@@ -1,7 +1,50 @@
-<html>
-<head>
-<title>{{project_name}} (by {{user_name}})</title>
-</head>
-<body>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  {% if current_user.is_authenticated %}
+  	<form method="post" id="upload-form" name="upload-form" onsubmit="uploadFormData('upload-form'); return false;">
+  	  <input type="file" name="file" id="file-input">
+  	  <input type="submit" value="Upload" name="submit">
+  	</form>
+    <button id="upload-button">Upload Files</button>
+    <button id="publish-project-button" onclick="publishProject('{{ project_name }}');">Publish</button>
+    <div id="project-files">
+      <h4>Files</h4>
+      <div id="project-file-list"</div>
+    </div>
+  {% else %}
+    Sign in!
+  {% endif %}
+</div>
+
+<div style="display: none">
+  <!-- Project file template -->
+  <div id="project-file-template" class="project-file">
+    <a href="#" class="file">dummy
+    </a>
+  </div>
+</div>
+<div class="container">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for message in messages %}
+      <div class="row">
+        <div class="col-md-12">
+          <div class="alert alert-info" role="alert">{{ message }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+<script>
+{% if current_user.is_authenticated %}
+  var API_TOKEN = '{{ current_user.generate_auth_token() }}';
+  var USER_ID = '{{ current_user.id }}';
+{% else %}
+  var API_TOKEN = 'anonymous_user';
+{% endif %}
+var PROJECT_NAME = '{{ project_name }}';
+</script>
+<script src="/static/project.js"></script>
+{% endblock %}

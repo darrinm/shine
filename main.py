@@ -2,6 +2,7 @@
 
 import json
 from apiclient import discovery
+from apiclient.http import MediaIoBaseUpload
 from oauth2client.client import GoogleCredentials
 from flask import request, Response, abort, Flask, render_template, url_for, flash, redirect
 import cloudstorage as gcs
@@ -12,6 +13,9 @@ from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSign
 app = Flask(__name__)
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
+
+# Flask's default handling of 
+app.url_map.strict_slashes = False
 
 app.secret_key = 'nevergonnaguessit' # Required for session management
 
@@ -153,7 +157,9 @@ def get_auth_token():
     return jsonify({ 'token': token.decode('ascii') })
 '''
 
-#TODO: @auth.login_required (w/ api-token)
+# Return a list of the current user's projects.
+
+# TODO: @auth.login_required (w/ api-token)
 @app.route('/api/project')
 def list_projects():
     # TODO: automated
@@ -174,7 +180,66 @@ def list_projects():
 
     return json.dumps(prefixes, indent=2)
 
-#TODO: @auth.login_required (w/ api-token)
+# HEAD - get project info
+# POST - create project (w/ many files as multipart/form-data)
+# DELETE - delete project
+# ?GET - return entire project zipped
+# ?PUT - accept entire project zipped
+# 
+#@app.route('/api/project/<project_name>')
+#def project(project_name):
+#    pass
+
+# GET - list all the files in the project
+# POST - add multiple files to the proejct (received as multipart/form-data)
+# TODO: @auth.login_required (w/ api-token)
+@app.route('/api/project/<project_name>/', methods=['GET', 'POST'])
+def files(project_name):
+    # TODO: automated
+    auth_token = request.headers['authorization']
+    user = User.verify_auth_token(auth_token)
+
+    if request.method == 'GET':
+        credentials = GoogleCredentials.get_application_default()
+        service = discovery.build('storage', 'v1', credentials=credentials)
+        #fields_to_return = 'nextPageToken,items(name,size,contentType,metadata(my-key))'
+        req = service.objects().list(bucket=FILE_BUCKET, prefix=user.id + '/' + project_name + '/')
+        files = []
+        while req:
+            resp = req.execute()
+            # TODO: error handling
+            if 'items' in resp:
+                files.extend(resp['items'])
+            req = service.objects().list_next(req, resp)
+            # TODO: error handling
+
+        return json.dumps(files, indent=2)
+    elif request.method == 'POST':
+        print request.files
+        fil = request.files['file']
+        file_name = user.id + '/' + project_name + '/' + fil.filename
+        credentials = GoogleCredentials.get_application_default()
+        service = discovery.build('storage', 'v1', credentials=credentials)
+        media = MediaIoBaseUpload(fil, fil.content_type)
+        insert = service.objects().insert(bucket=FILE_BUCKET, name=file_name, media_body=media)
+        insert.execute()
+
+        return json.dumps(request.files['file'].filename)
+
+# PUT - create the file (replace if already exists)
+# GET - return the file
+# DELETE - delete the file
+@app.route('/api/project/<project_name>/<file_path>', methods=['GET', 'POST', 'DELETE'])
+def file(project_name, file_path):
+    if request.method == 'GET':
+        pass
+    elif request.method == 'POST':
+        print request.files
+        pass
+    elif request.method == 'DELETE':
+        pass
+
+# TODO: @auth.login_required (w/ api-token)
 @app.route('/api/template')
 def list_templates():
     # TODO: automated
@@ -196,7 +261,7 @@ def list_templates():
 
     return json.dumps(prefixes, indent=2)
 
-#TODO: @auth.login_required (w/ api-token)
+# TODO: @auth.login_required (w/ api-token)
 @app.route('/api/publish/<project_name>')
 def publish_project(project_name):
     # TODO: use task queue (and/or have watchAll trigger updates)
