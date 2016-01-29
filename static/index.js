@@ -67,7 +67,7 @@ function refreshUserProjects() {
     var div = $('#user-project-list');
     for (var i = 0; i < data.length; i++) {
       var projectPath = data[i].substring(0, data[i].length - 1);
-      var separatorIndex = data[i].indexOf('/')
+      var separatorIndex = data[i].indexOf('/');
       var projectName = projectPath.slice(separatorIndex + 1);
       var childDiv = $('#project-thumbnail-template').clone();
       childDiv.removeAttr('id');
@@ -81,9 +81,8 @@ function refreshUserProjects() {
       */
 
       var header = childDiv.find(':header');
-      header.html(projectName + ' <a href="three.js/editor/index.html#app=https://storage.googleapis.com/zig/' +
-          projectPath + '/app.json">(edit)</a>\n' +
-          ' <a href="#" onclick="publishProject(\'' + projectName + '\')">(publish)</a>\n')
+      header.html(projectName + ' <a href="' + USER_ID + '/' + projectName + '">(edit)</a>\n' +
+          ' <a href="#" onclick="publishProject(\'' + projectName + '\')">(publish)</a>\n');
       div.append(childDiv);
     }
   });
