@@ -222,9 +222,9 @@ def files(project_name):
         service = discovery.build('storage', 'v1', credentials=credentials)
         media = MediaIoBaseUpload(fil, fil.content_type)
         insert = service.objects().insert(bucket=FILE_BUCKET, name=file_name, media_body=media)
-        insert.execute()
+        resp = insert.execute()
 
-        return json.dumps(request.files['file'].filename)
+        return json.dumps(resp)
 
 # PUT - create the file (replace if already exists)
 # GET - return the file
@@ -287,7 +287,10 @@ def publish_project(project_name):
                     sourceObject=file_name,
                     destinationBucket=PUBLISH_BUCKET,
                     destinationObject=file_name,
-                    body={})
+                    body={
+                        'contentType': item['contentType'], # Required.
+                        'cacheControl': 'private'           # No caching. Otherwise defaults to 1 hour.
+                    })
             # TODO: error handling
             resp2 = req2.execute()
             # TODO: error handling
